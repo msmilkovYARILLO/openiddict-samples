@@ -18,7 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 // (like pruning orphaned authorizations/tokens from the database) at regular intervals.
 builder.Services.AddQuartz(options =>
 {
+#pragma warning disable CS0618 // Type or member is obsolete
     options.UseMicrosoftDependencyInjectionJobFactory();
+#pragma warning restore CS0618 // Type or member is obsolete
     options.UseSimpleTypeLoader();
     options.UseInMemoryStore();
 });
