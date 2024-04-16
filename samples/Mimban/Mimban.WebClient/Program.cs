@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Client;
+using OpenIddict.Client.AspNetCore;
+using OpenIddict.Validation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +21,7 @@ builder.Services
         // Configure OpenIddict to use the Entity Framework Core stores and models.
         // Note: call ReplaceDefaultEntities() to replace the default OpenIddict entities.
         options.UseEntityFrameworkCore()
-                .UseDbContext<DbContext>();
+            .UseDbContext<DbContext>();
     })
 
     // Register the OpenIddict client components.
@@ -27,12 +30,12 @@ builder.Services
         // Note: this sample uses the authorization code flow,
         // but you can enable the other flows if necessary.
         options.AllowAuthorizationCodeFlow()
-                .AllowRefreshTokenFlow();
+            .AllowRefreshTokenFlow();
 
         // Register the signing and encryption credentials used to protect
         // sensitive data like the state tokens produced by OpenIddict.
         options.AddDevelopmentEncryptionCertificate()
-                .AddDevelopmentSigningCertificate();
+            .AddDevelopmentSigningCertificate();
 
         // Add the operating system integration.
         options.UseSystemIntegration();
@@ -41,7 +44,7 @@ builder.Services
         // assembly as a more specific user agent, which can be useful when dealing with
         // providers that use the user agent as a way to throttle requests (e.g Reddit).
         options.UseSystemNetHttp()
-                .SetProductInformation(typeof(Program).Assembly);
+            .SetProductInformation(typeof(Program).Assembly);
 
         // Add a client registration matching the client application definition in the server project.
         options.AddRegistration(new OpenIddictClientRegistration
@@ -51,10 +54,27 @@ builder.Services
             ClientId = "console_app",
             RedirectUri = new Uri("/", UriKind.Relative)
         });
+    })
+    .AddValidation(options =>
+    {
+        options.UseLocalServer();
+        options.UseAspNetCore();
     });
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    });
+
+builder.Services
+    .AddAuthorization();
 
 var app = builder.Build();
 
-app.MapGet("/test", [Authorize]() => "Hello World!");
+app.UseAuthentication()
+    .UseAuthorization();
+
+app.MapGet("/test", () => Results.Challenge(null, [OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme]));
 
 app.Run();

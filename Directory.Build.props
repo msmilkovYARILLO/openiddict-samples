@@ -26,9 +26,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NetFrameworkTargetFramework
-      Condition=" '$(NetFrameworkTargetFramework)' == '' ">net48</NetFrameworkTargetFramework>
-
     <NetCoreTargetFramework
       Condition=" '$(NetCoreTargetFramework)' == '' ">net8.0</NetCoreTargetFramework>
 
